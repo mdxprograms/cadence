@@ -13,20 +13,8 @@ var testData = [
 
 var Cadence = {
   view: '',
-  data: '',
   currentUser: '',
   layout: null,
-  httpRequest: null,
-
-  setData: function (url) {
-    'use strict';
-    this.utils.makeRequest(url);
-  },
-
-  getData: function () {
-    'use strict';
-    return this.data;
-  },
 
   findUser: function (username) {
     'use strict';
@@ -45,20 +33,16 @@ var Cadence = {
   },
 
   //@TODO: make this dynamic with template data
-  createView: function (view) {
+  createView: function () {
     'use strict';
-    if (this.currentUser) {
-      this.view = "<h2>User: " + this.currentUser.username + "</h2>" + "<p>Active: " + this.currentUser.active + "</p>";
-    }
+    this.view = "<h2>User: " + this.data.name + "</h2>" + "<p>Active: </p>";
 
     return this;
   },
 
   show: function () {
     'use strict';
-    if (!this.currentUser) {
-      return;
-    }
+    console.log(this);
 
     if (!this.layout) {
       this.defaultLayout().innerHTML += this.view;
@@ -73,40 +57,19 @@ var Cadence = {
     return this.layout;
   },
 
-  utils: {
-    makeRequest: function (url) {
-      'use strict';
-      var httpRequest = new XMLHttpRequest();
+  makeRequest: function (url) {
+    'use strict';
+    var self = this;
+    fetch(url, {
+      method: 'get'
+    }).then(function (response) {
+      return response.json();
+    }).then(function (data) {
+      self.data = data;
+    });
 
-      if (!httpRequest) {
-        console.error('Cannot create http request instance');
-        return false;
-      }
-
-      httpRequest.onreadystatechange = this.handleRequest;
-      httpRequest.open('GET', url);
-      httpRequest.send();
-
-      return this;
-    },
-
-    handleRequest: function (res) {
-      'use strict';
-      if (res.target.readyState === 4) {
-        if (res.target.status === 200) {
-          this.data = res.target.responseText;
-        } else {
-          console.error('There was a problem with the request');
-        }
-      }
-
-      console.log(this);
-      //      this.data = this.httpRequest.data;
-
-      return this;
-    }
+    return self;
   }
 };
 
-var app = Cadence.setData('http://uinames.com/api/');
-app.getData();
+var app = Cadence.makeRequest('http://uinames.com/api/').createView().show();
